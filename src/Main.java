@@ -1,9 +1,21 @@
+import java.util.HashSet;
+
 public class Main {
     public static void main(String[] args) {
 
-        Scanner scanner = new Scanner("test.txt");
+        FiniteAutomata dfa = new FiniteAutomata();
 
-        scanner.scan();
+        HashSet<Integer> closure;
+
+        for(int i = 0; i < 12; i++){
+            closure = dfa.findEpsilonClosure(i);
+            System.out.print("State " + Integer.toString(i) + ": ");
+
+            for (Integer integer : closure) {
+                System.out.print(integer + " ");
+            }
+            System.out.println();
+        }
 
     }
 }
