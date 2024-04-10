@@ -12,7 +12,8 @@ public class FiniteAutomata {
         CHAR,
         CHAR2,
         STRING,
-        PUNCTUATION
+        PUNCTUATION,
+        NONE
     }
 
     enum Input{
@@ -121,9 +122,107 @@ public class FiniteAutomata {
 
     public void ConvertToDFA(){
 
+        HashMap<HashSet<Integer>, HashMap<Input, HashSet<Integer>>> midDFA = new HashMap<>();
+        Input[] inputs = Input.values();
+        Stack<HashSet<Integer>> stack = new Stack<>();
+        stack.push(findEpsilonClosure(State.START.ordinal()));
+        HashSet<HashSet<Integer>> processedStates = new HashSet<>();
+
+        while(!stack.empty()){
+            HashSet<Integer> currentState = stack.pop();
+            processedStates.add(currentState);
+
+            HashMap<Input, HashSet<Integer>> row = new HashMap<>();
+
+            for(int i = 0; i < inputs.length - 1; i++){
+                HashSet<Integer> nextStates = findNextStates(currentState, inputs[i]);
+                HashSet<Integer> nextStatesClosure = findEpsilonClosure(nextStates);
+                if(!processedStates.contains(nextStatesClosure) && !nextStatesClosure.isEmpty())
+                    stack.add(nextStatesClosure);
+                row.put(inputs[i], nextStatesClosure);
+            }
+
+            midDFA.put(currentState, row);
+
+        }
+
+        int counter = 0;
+        HashMap<HashSet<Integer>, Integer> stateMapping = new HashMap<>();
+
+        for(HashSet<Integer> state : midDFA.keySet()){
+            stateMapping.put(state, counter);
+            counter++;
+        }
+
+        for(HashSet<Integer> state : midDFA.keySet()){
+            HashMap<Input, Integer> row = new HashMap<>();
+            HashMap<Input, HashSet<Integer>> entry = midDFA.get(state);
+
+            for(Input i : entry.keySet()){
+                row.put(i, stateMapping.get(entry.get(i)));
+            }
+            DFA.put(stateMapping.get(state), row);
+        }
+
     }
 
-    public HashSet<Integer> findEpsilonClosure(int startState){
+    public void printDFA(){
+
+        for(Integer i : DFA.keySet()){
+            System.out.print(i);
+            System.out.print(": ");
+            System.out.println(DFA.get(i));
+        }
+
+    }
+
+    private void printMidDFA(HashMap<HashSet<Integer>, HashMap<Input, HashSet<Integer>>> midDFA){
+
+        for(HashSet<Integer> key : midDFA.keySet()){
+            for(Integer v : key){
+                System.out.print(Integer.toString(v) + " ");
+            }
+            System.out.print(": ");
+
+            for(Input i : midDFA.get(key).keySet()){
+                System.out.print(Integer.toString(i.ordinal()) + "(");
+                for(Integer c : midDFA.get(key).get(i)){
+                    System.out.print(Integer.toString(c) + " ");
+                }
+                System.out.print(")  ");
+            }
+
+            System.out.println();
+        }
+
+    }
+
+    private HashSet<Integer> findNextStates(HashSet<Integer> state, Input input){
+
+        HashSet<Integer> result = new HashSet<>();
+
+        for(Integer s : state){
+            if(NFA.get(s).containsKey(input)){
+                result.addAll(NFA.get(s).get(input));
+            }
+        }
+
+        return result;
+
+    }
+
+    private HashSet<Integer> findEpsilonClosure(HashSet<Integer> states){
+        HashSet<Integer> result = new HashSet<>();
+
+        for(Integer state : states){
+            HashSet<Integer> r = findEpsilonClosure(state);
+            result.addAll(r);
+        }
+
+        return result;
+    }
+
+    private HashSet<Integer> findEpsilonClosure(int startState){
         HashSet<Integer> result = new HashSet<>();
 
         Stack<Integer> stack = new Stack<>();
