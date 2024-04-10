@@ -2,7 +2,7 @@ import java.util.HashMap;
 
 public class FiniteAutomata {
 
-    enum ScannerState{
+    enum State{
         START,
         IDENTIFIER,
         INTEGER,
@@ -15,7 +15,7 @@ public class FiniteAutomata {
         PUNCTUATION
     }
 
-    enum CharType{
+    enum Input{
         LETTER,
         DIGIT,
         HASH,
@@ -25,11 +25,12 @@ public class FiniteAutomata {
         WHITESPACE,
         SINGLE_QUOTE,
         DOUBLE_QUOTE,
-        SPECIAL
+        SPECIAL,
+        EPSILON
 
     }
 
-    private HashMap<ScannerState, HashMap<CharType, ScannerState>> table;
+    private HashMap<State, HashMap<Input, State>> table;
 
     public FiniteAutomata(){
         table = new HashMap<>();
