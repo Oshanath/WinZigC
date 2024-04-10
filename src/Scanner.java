@@ -3,19 +3,6 @@ import java.nio.charset.Charset;
 
 public class Scanner {
 
-    enum ScannerState{
-        START,
-        IDENTIFIER,
-        INTEGER,
-        COMMENT_SINGLE,
-        COMMENT_MULTI,
-        WHITESPACE,
-        CHAR,
-        CHAR2,
-        STRING,
-        PUNCTUATION
-    }
-
     enum TOKEN{
         NEWLINE,
         PROGRAM,
