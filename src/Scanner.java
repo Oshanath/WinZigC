@@ -13,8 +13,8 @@ public class Scanner {
         RETURN,
         BEGIN,
         END,
-        SWAP,
-        ASSIGN,
+        SWAP, // :=:
+        ASSIGN, // :=
         OUTPUT,
         IF,
         THEN,
@@ -23,20 +23,20 @@ public class Scanner {
         DO,
         CASE,
         OF,
-        DDOT,
+        DDOT, // ..
         OTHERWISE,
         REPEAT,
         FOR,
-        UNTIl,
+        UNTIL,
         LOOP,
         POOL,
         EXIT,
-        LEQ,
-        NEQ,
-        LT,
-        GEQ,
-        GT,
-        EQ,
+        LEQ, // <=
+        NEQ, // <>
+        LT, // <
+        GEQ, // >=
+        GT, // >
+        EQ, // =
         MOD,
         AND,
         OR,
@@ -47,17 +47,25 @@ public class Scanner {
         CHR,
         ORD,
         EOF,
-        BLOCK_BEGIN,
-        COLON,
-        SEMI_COLON,
-        DOT,
-        COMMA,
-        BRACKET_BEGIN,
-        BRACKET_END,
-        PLUS,
-        MINUS,
-        MULT,
-        DIV
+        BLOCK_BEGIN, // {
+        COLON, // :
+        SEMI_COLON, // ;
+        DOT, // .
+        COMMA, // ,
+        BRACKET_BEGIN, // (
+        BRACKET_END, // )
+        PLUS, // +
+        MINUS, // -
+        MULT, // *
+        DIV, // /
+        WHITESPACE,
+        INTEGER,
+        CHAR,
+        STRING,
+        COMMENT,
+        END_OF_PROGRAM,
+        IDENTIFIER,
+        ERROR
     }
 
     Reader reader;
