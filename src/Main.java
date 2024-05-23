@@ -9,7 +9,7 @@ public class Main {
         Screener screener = new Screener();
         String program_string = null;
         try {
-            program_string = winZigProgramReader.readProgram("E:\\Aca\\8th Semester\\CS4542 - Compiler Design\\Project\\WinZigC\\winzig_test_programs\\winzig_02");
+            program_string = winZigProgramReader.readProgram("winzig_test_programs\\winzig_01");
             Lexer lexer = new Lexer(program_string);
             List<Token> scannedTokenList = lexer.getTokenList();
             List<Token> screenedTokenList = screener.getScreenedTokenList(scannedTokenList);

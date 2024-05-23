@@ -3,6 +3,8 @@ import java.nio.charset.Charset;
 
 public class Scanner {
 
+
+
     enum TOKEN{
         NEWLINE,
         PROGRAM,
