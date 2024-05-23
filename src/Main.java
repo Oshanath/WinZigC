@@ -9,7 +9,8 @@ public class Main {
         Screener screener = new Screener();
         String program_string = null;
         try {
-            program_string = winZigProgramReader.readProgram("winzig_test_programs\\winzig_01");
+            program_string = winZigProgramReader.readProgram("winzig_test_programs\\winzig_02");
+
             Lexer lexer = new Lexer(program_string);
             List<Token> scannedTokenList = lexer.getTokenList();
             List<Token> screenedTokenList = screener.getScreenedTokenList(scannedTokenList);
@@ -17,6 +18,10 @@ public class Main {
             for (Token token : screenedTokenList) {
                 System.out.println(token.type + ":" + token.text);
             }
+
+            Parser parser = new Parser(screenedTokenList);
+
+
         } catch (IOException e) {
             System.out.println(e.getMessage());
         }
