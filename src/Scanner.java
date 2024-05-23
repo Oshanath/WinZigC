@@ -57,7 +57,12 @@ public class Scanner {
         PLUS,
         MINUS,
         MULT,
-        DIV
+        DIV,
+        WHITESPACE,
+        INTEGER,
+        CHAR,
+        STRING,
+        COMMENT
     }
 
     Reader reader;

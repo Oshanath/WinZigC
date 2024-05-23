@@ -247,7 +247,89 @@ public class FiniteAutomata {
     }
 
     public void Minimize(){
+        //TODO: function to convert DFA to minimal DFA
+        // Applying Hopcroft's Algorithm
 
+        // Step 1: Partition states into accepting and non-accepting sets
+        HashSet<Integer> acceptingStates = new HashSet<>();
+        HashSet<Integer> nonAcceptingStates = new HashSet<>();
+        for (Integer state : DFA.keySet()) {
+            // Assuming some criteria to determine accepting states
+            if (isAccepting(state)) {
+                acceptingStates.add(state);
+            } else {
+                nonAcceptingStates.add(state);
+            }
+        }
+
+        // Step 2: Initialize partition P and W
+        HashSet<HashSet<Integer>> P = new HashSet<>();
+        HashSet<HashSet<Integer>> W = new HashSet<>();
+        P.add(acceptingStates);
+        P.add(nonAcceptingStates);
+        W.add(acceptingStates);
+
+        // Step 3: Refinement loop
+        while (!W.isEmpty()) {
+            HashSet<Integer> A = W.iterator().next();
+            W.remove(A);
+            for (Input input : Input.values()) {
+                HashSet<Integer> X = getNextStates(A, input); // Get the set of states reachable from A on input
+                for (HashSet<Integer> Y : P) {
+                    HashSet<Integer> intersection = new HashSet<>(Y);
+                    intersection.retainAll(X);
+                    HashSet<Integer> difference = new HashSet<>(Y);
+                    difference.removeAll(X);
+                    if (!intersection.isEmpty() && !difference.isEmpty()) {
+                        P.remove(Y);
+                        P.add(intersection);
+                        P.add(difference);
+                        if (W.contains(Y)) {
+                            W.remove(Y);
+                            W.add(intersection);
+                            W.add(difference);
+                        } else {
+                            if (intersection.size() <= difference.size()) {
+                                W.add(intersection);
+                            } else {
+                                W.add(difference);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // Step 4: Construct the minimized DFA
+        HashMap<HashSet<Integer>, HashMap<Input, Integer>> minDFA = new HashMap<>();
+        HashMap<HashSet<Integer>, Integer> stateMapping = new HashMap<>();
+        int stateCounter = 0;
+        for (HashSet<Integer> group : P) {
+            stateMapping.put(group, stateCounter++);
+        }
+        for (HashSet<Integer> group : P) {
+            HashMap<Input, Integer> transitions = new HashMap<>();
+            for (Input input : Input.values()) {
+                HashSet<Integer> nextGroup = getNextStates(group, input);
+                transitions.put(input, stateMapping.get(nextGroup));
+            }
+            minDFA.put(group, transitions);
+        }
+    }
+
+    private boolean isAccepting(Integer state) {
+        // Implement your logic to determine if the state is accepting
+        return false; // Placeholder logic, modify as per your DFA definition
+    }
+
+    private HashSet<Integer> getNextStates(HashSet<Integer> currentState, Input input) {
+        HashSet<Integer> result = new HashSet<>();
+        for (Integer state : currentState) {
+            if (DFA.get(state).containsKey(input)) {
+                result.add(DFA.get(state).get(input));
+            }
+        }
+        return result;
     }
 
 }

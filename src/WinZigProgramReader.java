@@ -6,7 +6,7 @@ public class WinZigProgramReader {
     public String readProgram(String path) throws IOException {
         BufferedReader reader = new BufferedReader(new FileReader(path));
         StringBuilder stringBuilder = new StringBuilder();
-        String ls = System.getProperty("line.separator");
+        String ls = System.getProperty("line_number.separator");
 
         String line;
         while((line = reader.readLine()) != null) {
