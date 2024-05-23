@@ -1,4 +1,6 @@
 
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.List;
 import java.util.Stack;
 
@@ -43,6 +45,25 @@ class BinaryTreeNode{
             right.PreOrderTraverse(indentSize);
         }
     }
+
+    // Pre Order Traverse with indented printing and writing to an output file
+    public void PreOrderTraverse(int indentSize, FileWriter writer) throws IOException {
+        for(int i = 0 ; i < indentSize; i++ ) {
+//            System.out.print(". ");
+            writer.write(". ");
+        }
+//        System.out.print(this.node_label);
+//        System.out.println("("+ childCount +")");
+        writer.write(this.node_label + "(" + this.childCount + ")\n");
+
+        if(this.left != null){
+            left.PreOrderTraverse(indentSize + 1,writer);
+        }
+
+        if(this.right != null){
+            right.PreOrderTraverse(indentSize,writer);
+        }
+    }
 }
 
 public class Parser{
@@ -52,6 +73,8 @@ public class Parser{
     private List<Token> tokenStream;
 
     private int tokenIndex;
+
+    private final FileWriter fileWriter;
 
     Token nextToken;
 
@@ -73,12 +96,21 @@ public class Parser{
         tokenIndex++;
     }
 
-    Parser(List<Token> tokenStream){
+    Parser(List<Token> tokenStream) throws IOException {
         this.tokenStream = tokenStream;
         binaryTreeStack = new Stack<>();
-
+        this.fileWriter = null;
         getNextToken();
         winZigAST();
+    }
+
+    Parser(List<Token> tokenStream, String outputFilePath) throws IOException {
+        this.tokenStream = tokenStream;
+        binaryTreeStack = new Stack<>();
+        this.fileWriter = new FileWriter(outputFilePath);
+        getNextToken();
+        winZigAST();
+        this.fileWriter.close();
     }
 
     // look what's the next token without incrementing the token index
@@ -86,7 +118,7 @@ public class Parser{
         return tokenStream.get(tokenIndex);
     }
 
-    void winZigAST(){
+    void winZigAST() throws IOException {
         read("program");
         Name();
         read(":");
@@ -111,7 +143,12 @@ public class Parser{
 //        }
 
         for(BinaryTreeNode node : binaryTreeStack){
-            node.PreOrderTraverse(0);
+            if(this.fileWriter == null){
+                node.PreOrderTraverse(0);
+            }else {
+                node.PreOrderTraverse(0,this.fileWriter);
+            }
+
         }
 
     }
