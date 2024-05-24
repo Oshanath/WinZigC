@@ -5,127 +5,114 @@ import java.util.List;
 import java.util.Stack;
 
 // binary tree node to represent nodes in AST
-class BinaryTreeNode{
+class BinaryTreeNode {
 
-    private String node_label;
+    private BinaryTreeNode leftTree;
 
-    private BinaryTreeNode left;
+    private BinaryTreeNode rightTree;
 
-    private BinaryTreeNode right;
+    private String label;
 
-    private int childCount;
+    private int children;
 
-    BinaryTreeNode(String node_label){
-        this.node_label = node_label;
+    BinaryTreeNode(String node_label) {
+        this.label = node_label;
     }
 
     public void setLeftChild(BinaryTreeNode node) {
-        left = node;
+        leftTree = node;
     }
 
     public void setRightChild(BinaryTreeNode node) {
-        right = node;
+        rightTree = node;
     }
 
-    public void setChildCount(int c) {
-        childCount = c;
+    public void setChildren(int c) {
+        children = c;
     }
 
-    // Pre Order Traverse with indented printing
-    public void PreOrderTraverse(int indentSize){
-        for(int i = 0 ; i < indentSize; i++ ) System.out.print(". ");
-        System.out.print(this.node_label);
-        System.out.println("("+ childCount +")");
+    // Traversing the tree in pre-order
+    public void PreOrderTraverse(int indentation) {
+        for (int i = 0; i < indentation; i++)
+            System.out.print(". ");
+        System.out.print(this.label);
+        System.out.println("(" + children + ")");
 
-        if(this.left != null){
-            left.PreOrderTraverse(indentSize + 1);
+        if (this.leftTree != null) {
+            leftTree.PreOrderTraverse(indentation + 1);
         }
 
-        if(this.right != null){
-            right.PreOrderTraverse(indentSize);
+        if (this.rightTree != null) {
+            rightTree.PreOrderTraverse(indentation);
         }
     }
 
-    // Pre Order Traverse with indented printing and writing to an output file
-    public void PreOrderTraverse(int indentSize, FileWriter writer) throws IOException {
-        for(int i = 0 ; i < indentSize; i++ ) {
-//            System.out.print(". ");
+    // Traversing the tree in pre-order and writing to output file
+    public void PreOrderTraverse(int indentation, FileWriter writer) throws IOException {
+        for (int i = 0; i < indentation; i++) {
             writer.write(". ");
         }
-//        System.out.print(this.node_label);
-//        System.out.println("("+ childCount +")");
-        writer.write(this.node_label + "(" + this.childCount + ")\n");
+        writer.write(this.label + "(" + this.children + ")\n");
 
-        if(this.left != null){
-            left.PreOrderTraverse(indentSize + 1,writer);
+        if (this.leftTree != null) {
+            leftTree.PreOrderTraverse(indentation + 1, writer);
         }
 
-        if(this.right != null){
-            right.PreOrderTraverse(indentSize,writer);
+        if (this.rightTree != null) {
+            rightTree.PreOrderTraverse(indentation, writer);
         }
     }
 }
 
-public class Parser{
-
-    private Stack<BinaryTreeNode> binaryTreeStack;
-
-    private List<Token> tokenStream;
-
-    private int tokenIndex;
+public class Parser {
 
     private final FileWriter fileWriter;
-
+    private List<Token> tokenList;
+    private int tokenIndex;
     Token nextToken;
+    private Stack<BinaryTreeNode> treeStack;
 
-    boolean hasNext(){
-        return tokenIndex <= tokenStream.size()-2;
-    }
-
-    String peek(){
-        if(tokenIndex <= tokenStream.size()-1){
-            return tokenStream.get(tokenIndex).type.type;
-        }
-        System.out.println("TOKENS ARE OVER");
-        throw new Error();
-    }
-
-    // set the next token and increment the index
-    void getNextToken(){
-        nextToken = tokenStream.get(tokenIndex);
-        tokenIndex++;
-    }
-
-    Parser(List<Token> tokenStream) throws IOException {
-        this.tokenStream = tokenStream;
-        binaryTreeStack = new Stack<>();
+    Parser(List<Token> tokenList) throws IOException {
+        this.tokenList = tokenList;
+        treeStack = new Stack<>();
         this.fileWriter = null;
         getNextToken();
         winZigAST();
     }
 
-    Parser(List<Token> tokenStream, String outputFilePath) throws IOException {
-        this.tokenStream = tokenStream;
-        binaryTreeStack = new Stack<>();
+    Parser(List<Token> tokenList, String outputFilePath) throws IOException {
+        this.tokenList = tokenList;
+        treeStack = new Stack<>();
 
-        if(outputFilePath != null){
+        if (outputFilePath != null) {
             this.fileWriter = new FileWriter(outputFilePath);
-        }
-        else{
+        } else {
             this.fileWriter = null;
         }
 
         getNextToken();
         winZigAST();
 
-        if(fileWriter != null){
+        if (fileWriter != null) {
             this.fileWriter.close();
         }
     }
 
-    // look what's the next token without incrementing the token index
-    public Token peekToken(){
-        return tokenStream.get(tokenIndex);
+    boolean hasNext() {
+        return tokenIndex <= tokenList.size() - 2;
+    }
+
+    String peek() {
+        if (tokenIndex <= tokenList.size() - 1) {
+            return tokenList.get(tokenIndex).type.type;
+        }
+        System.out.println("End of token list");
+        throw new Error();
+    }
+
+    void getNextToken() {
+        nextToken = tokenList.get(tokenIndex);
+        tokenIndex++;
     }
 
     void winZigAST() throws IOException {
@@ -140,51 +127,41 @@ public class Parser{
         Name();
         read(".");
 
-//        System.out.println(tokenStream.get(1));
-//        System.out.println(tokenStream.get(tokenStream.size()-2));
+        constructTree("program", 7);
 
-
-        // change count accordingly
-        constructTree("program" ,7);
-
-//        for(ASTNode node : treeStack){
-//            node.DFTraverse(0);
-//            System.out.println("---------------------");
-//        }
-
-        for(BinaryTreeNode node : binaryTreeStack){
-            if(this.fileWriter == null){
+        for (BinaryTreeNode node : treeStack) {
+            if (this.fileWriter == null) {
                 node.PreOrderTraverse(0);
-            }else {
-                node.PreOrderTraverse(0,this.fileWriter);
+            } else {
+                node.PreOrderTraverse(0, this.fileWriter);
             }
 
         }
 
     }
 
-    void Name(){
+    void Name() {
         read(TokenType.IDENTIFIER);
     }
 
-    void Consts(){
-        if(nextToken.type.type.equals("const")){
+    void Consts() {
+        if (nextToken.type.type.equals("const")) {
             read("const");
             int list_count = 1;
             Const();
-            while(!nextToken.type.type.equals(";")){
+            while (!nextToken.type.type.equals(";")) {
                 read(",");
                 Const();
                 list_count += 1;
             }
             read(";");
-            constructTree("consts" ,list_count);
-        }else{
-            constructTree("consts" ,0);
+            constructTree("consts", list_count);
+        } else {
+            constructTree("consts", 0);
         }
     }
 
-    void Const(){
+    void Const() {
         Name();
         read("=");
         ConstValue();
@@ -192,35 +169,34 @@ public class Parser{
         constructTree("const", 2);
     }
 
-    void ConstValue(){
-        // skip <char> or <integer> but create a node for <identifier>
-        if(nextToken.type.type.equals("<char>") || nextToken.type.type.equals("<integer>") ){
+    void ConstValue() {
+        if (nextToken.type.type.equals("<char>") || nextToken.type.type.equals("<integer>")) {
             read(nextToken.type);
         }
 
-        if(nextToken.type.type.equals("<identifier>")){
+        if (nextToken.type.type.equals("<identifier>")) {
             Name();
         }
     }
 
-    void Types(){
-        if(nextToken.type.type.equals("type")){
+    void Types() {
+        if (nextToken.type.type.equals("type")) {
             read("type");
             int count = 0;
-            while(nextToken.type.type.equals("<identifier>")){
+            while (nextToken.type.type.equals("<identifier>")) {
                 Type();
                 read(";");
                 count++;
             }
             constructTree("types", count);
 
-        }else{
+        } else {
             constructTree("types", 0);
         }
     }
 
-    void Type(){
-        if(nextToken.type.type.equals("<identifier>")){
+    void Type() {
+        if (nextToken.type.type.equals("<identifier>")) {
             Name();
             read("=");
             LitList();
@@ -229,11 +205,11 @@ public class Parser{
         }
     }
 
-    void LitList(){
+    void LitList() {
         read("(");
         Name();
         int count = 1;
-        while(!nextToken.type.type.equals(")")){
+        while (!nextToken.type.type.equals(")")) {
             read(",");
             Name();
             count++;
@@ -242,28 +218,28 @@ public class Parser{
         constructTree("lit", count);
     }
 
-    void Dclns(){
-        if(nextToken.type.type.equals("var")){
+    void Dclns() {
+        if (nextToken.type.type.equals("var")) {
             read("var");
             Dcln();
             read(";");
             int count = 1;
-            while(nextToken.type.type.equals("<identifier>")){
+            while (nextToken.type.type.equals("<identifier>")) {
                 Dcln();
                 read(";");
                 count++;
             }
 
             constructTree("dclns", count);
-        }else{
+        } else {
             constructTree("dclns", 0);
         }
     }
 
-    void Dcln(){
+    void Dcln() {
         Name();
         int count = 1;
-        while(!nextToken.type.type.equals(":")){
+        while (!nextToken.type.type.equals(":")) {
             read(",");
             Name();
             count++;
@@ -275,11 +251,11 @@ public class Parser{
         constructTree("var", count);
     }
 
-    void SubProgs(){
+    void SubProgs() {
 
         Fcn();
         int count = 1;
-        while(nextToken.type == TokenType.FUNCTION){
+        while (nextToken.type == TokenType.FUNCTION) {
             Fcn();
             count++;
         }
@@ -287,7 +263,7 @@ public class Parser{
         constructTree("subprogs", count);
     }
 
-    void Fcn(){
+    void Fcn() {
         read("function");
         Name();
         read("(");
@@ -303,13 +279,13 @@ public class Parser{
         Name();
         read(";");
 
-        constructTree("fcn",8);
+        constructTree("fcn", 8);
     }
 
-    void Params(){
+    void Params() {
         Dcln();
         int count = 1;
-        while(nextToken.type.type.equals(";")){
+        while (nextToken.type.type.equals(";")) {
             read(";");
             Dcln();
             count++;
@@ -318,11 +294,11 @@ public class Parser{
         constructTree("params", count);
     }
 
-    void Body(){
+    void Body() {
         read("begin");
         Statement();
         int count = 1;
-        while(nextToken.type.type.equals(";")){
+        while (nextToken.type.type.equals(";")) {
             read(";");
             Statement();
             count++;
@@ -332,16 +308,16 @@ public class Parser{
         constructTree("block", count);
     }
 
-    void Statement(){
+    void Statement() {
         int count = 0;
-        switch(nextToken.type.type){
+        switch (nextToken.type.type) {
             case "if":
                 read("if");
                 Expression();
                 read("then");
                 Statement();
                 count = 2;
-                if(nextToken.type.type.equals("else")){
+                if (nextToken.type.type.equals("else")) {
                     read("else");
                     Statement();
                     count++;
@@ -366,13 +342,13 @@ public class Parser{
                 Expression();
                 read("do");
                 Statement();
-                constructTree("while",2);
+                constructTree("while", 2);
                 break;
             case "repeat":
                 read("repeat");
                 Statement();
                 count = 1;
-                while(nextToken.type.type.equals(";")){
+                while (nextToken.type.type.equals(";")) {
                     read(";");
                     Statement();
                     count++;
@@ -386,27 +362,26 @@ public class Parser{
                 read("loop");
                 Statement();
                 count = 1;
-                while(nextToken.type.type.equals(";")){
+                while (nextToken.type.type.equals(";")) {
                     read(";");
                     Statement();
                     count++;
                 }
                 read("pool");
-                constructTree("loop",count);
+                constructTree("loop", count);
                 break;
             case "output":
                 read("output");
                 read("(");
                 OutEXp();
                 count = 1;
-                // out exp list
-                while(nextToken.type.type.equals(",")){
+                while (nextToken.type.type.equals(",")) {
                     read(",");
                     OutEXp();
                     count++;
                 }
                 read(")");
-                constructTree("output",count);
+                constructTree("output", count);
                 break;
             case "exit":
                 read("exit");
@@ -422,7 +397,7 @@ public class Parser{
                 read("(");
                 Name();
                 count = 1;
-                while(nextToken.type.type.equals(",")){
+                while (nextToken.type.type.equals(",")) {
                     read(",");
                     Name();
                     count++;
@@ -447,16 +422,17 @@ public class Parser{
                 Body();
                 break;
             default:
-                constructTree("<null>",0);
+                constructTree("<null>", 0);
                 break;
         }
     }
 
-    int Caseclauses(){
+    int Caseclauses() {
         Caseclause();
         read(";");
         int count = 1;
-        while(nextToken.type.type.equals("<integer>")  || nextToken.type.type.equals("<char>")  || nextToken.type.type.equals("<identifier>")){
+        while (nextToken.type.type.equals("<integer>") || nextToken.type.type.equals("<char>")
+                || nextToken.type.type.equals("<identifier>")) {
             Caseclause();
             read(";");
             count++;
@@ -465,10 +441,10 @@ public class Parser{
         return count;
     }
 
-    void Caseclause(){
+    void Caseclause() {
         CaseExpression();
         int count = 1;
-        while(nextToken.type.type.equals(",")){
+        while (nextToken.type.type.equals(",")) {
             read(",");
             CaseExpression();
             count++;
@@ -479,57 +455,57 @@ public class Parser{
         constructTree("case_clause", count);
     }
 
-    void CaseExpression(){
+    void CaseExpression() {
         ConstValue();
-        if(nextToken.type.type.equals("..")){
+        if (nextToken.type.type.equals("..")) {
             read("..");
             ConstValue();
-            constructTree("..",2);
+            constructTree("..", 2);
         }
     }
 
-    int  OtherwiseClause(){
-        if(nextToken.type.type.equals("otherwise")){
+    int OtherwiseClause() {
+        if (nextToken.type.type.equals("otherwise")) {
             read("otherwise");
             Statement();
-            constructTree("otherwise",1);
+            constructTree("otherwise", 1);
             return 1;
-        }else{
+        } else {
             return 0;
         }
     }
 
-    void OutEXp(){
-        if(nextToken.type.type.equals("<string>")){
+    void OutEXp() {
+        if (nextToken.type.type.equals("<string>")) {
             StringNode();
-        }else{
+        } else {
             Expression();
             constructTree("integer", 1);
         }
     }
 
-    void StringNode(){
+    void StringNode() {
         read(TokenType.STRING);
     }
 
-    void ForStat(){
-        if(nextToken.type.type.equals(";")){
-            constructTree("<null>",0);
-        }else{
+    void ForStat() {
+        if (nextToken.type.type.equals(";")) {
+            constructTree("<null>", 0);
+        } else {
             Assignment();
         }
     }
 
-    void ForExp(){
-        if(nextToken.type.type.equals(";")){
-            constructTree("true",0);
-        }else{
+    void ForExp() {
+        if (nextToken.type.type.equals(";")) {
+            constructTree("true", 0);
+        } else {
             Expression();
         }
     }
 
-    void Assignment(){
-        switch(peek()){
+    void Assignment() {
+        switch (peek()) {
             case ":=":
                 Name();
                 read(":=");
@@ -543,18 +519,17 @@ public class Parser{
                 constructTree("swap", 2);
                 break;
             default:
-                System.out.println("ERROR PEEK: "+peek());
-                System.out.println("ERROR NEXT: "+nextToken.type);
-                System.out.println("LINE NO: " + nextToken.line_number);
-                System.out.println("CLMN NO: " + nextToken.column_number);
-                throw new Error();
+                throw new Error("Error: " + peek() + ". Error Next: " + nextToken.type + ". Line: "
+                        + nextToken.line_number + " .Column: " + nextToken.column_number);
         }
     }
 
-    void Expression(){
+    void Expression() {
         Term();
-        if(nextToken.type.type.equals("<=") || nextToken.type.type.equals("<") || nextToken.type.type.equals(">=") || nextToken.type.type.equals(">") || nextToken.type.type.equals("=") || nextToken.type.type.equals("<>")){
-            switch(nextToken.type.type){
+        if (nextToken.type.type.equals("<=") || nextToken.type.type.equals("<") || nextToken.type.type.equals(">=")
+                || nextToken.type.type.equals(">") || nextToken.type.type.equals("=")
+                || nextToken.type.type.equals("<>")) {
+            switch (nextToken.type.type) {
                 case "<=":
                     read("<=");
                     Term();
@@ -586,18 +561,14 @@ public class Parser{
                     constructTree("<>", 2);
                     break;
                 default:
-                    System.out.println("ERROR in Expression");
-                    System.out.println("TOKEN WAS: "+nextToken.type);
-                    System.out.println("LINE NO: " + nextToken.line_number);
-                    System.out.println("CLMN NO: " + nextToken.column_number);
-                    throw new Error();
+                    throw new Error("Error in Expression");
             }
         }
     }
 
     void Term() {
         Factor();
-        while (nextToken.type.type.equals("+") || nextToken.type.type.equals("-") || nextToken.type.type.equals("or") ) {
+        while (nextToken.type.type.equals("+") || nextToken.type.type.equals("-") || nextToken.type.type.equals("or")) {
             switch (nextToken.type.type) {
                 case "+":
                     read("+");
@@ -615,18 +586,17 @@ public class Parser{
                     constructTree("or", 2);
                     break;
                 default:
-                    System.out.println("ERROR in Term");
-                    System.out.println("LINE NO: " + nextToken.line_number);
-                    System.out.println("CLMN NO: " + nextToken.column_number);
+                    System.out.println("Error in Term");
                     throw new Error();
             }
         }
     }
 
-    void Factor(){
+    void Factor() {
         Primary();
-        while(nextToken.type.type.equals("*") || nextToken.type.type.equals("/") ||nextToken.type.type.equals("and") ||nextToken.type.type.equals("mod") ){
-            switch(nextToken.type.type){
+        while (nextToken.type.type.equals("*") || nextToken.type.type.equals("/") || nextToken.type.type.equals("and")
+                || nextToken.type.type.equals("mod")) {
+            switch (nextToken.type.type) {
                 case "*":
                     read("*");
                     Factor();
@@ -651,27 +621,28 @@ public class Parser{
         }
     }
 
-    void Primary(){
+    void Primary() {
 
-        switch(nextToken.type.type){
+        switch (nextToken.type.type) {
             case "<char>":
-                read(TokenType.CHAR); break;
+                read(TokenType.CHAR);
+                break;
             case "<integer>":
-//                System.out.println(nextToken.type + " "+nextToken.text);
-                read(TokenType.INTEGER); break;
+                read(TokenType.INTEGER);
+                break;
             case "eof":
                 read("eof");
-                constructTree("eof",0);
+                constructTree("eof", 0);
                 break;
             case "-":
                 read("-");
                 Primary();
-                constructTree("-",1);
+                constructTree("-", 1);
                 break;
             case "+":
                 read("+");
                 Primary();
-                constructTree("+",1);
+                constructTree("+", 1);
                 break;
             case "not":
                 read("not");
@@ -712,12 +683,12 @@ public class Parser{
                 constructTree("ord", 1);
                 break;
             case "<identifier>":
-                if(peek().equals("(")){
+                if (peek().equals("(")) {
                     Name();
                     read("(");
                     Expression();
                     int count = 2;
-                    while(nextToken.type.type.equals(",")){
+                    while (nextToken.type.type.equals(",")) {
                         read(",");
                         Expression();
                         count++;
@@ -725,84 +696,60 @@ public class Parser{
                     read(")");
 
                     constructTree("call", count);
-                }else{
+                } else {
                     Name();
                 }
                 break;
             default:
-                System.out.println("ERROR WHILE PARSING: " + nextToken.type);
-                System.out.println("LINE NO: " + nextToken.line_number);
-                System.out.println("CLMN NO: " + nextToken.column_number);
-                throw new Error();
+                throw new Error("Error while parsing: " + nextToken.type + ". Line: " + nextToken.line_number
+                        + "Column: " + nextToken.column_number);
         }
 
     }
 
-    void read(String type){
-        if(!nextToken.type.type.equals(type)){
-            System.out.println("EXPECTED: ->|"+type+"|<-");
-            System.out.println("FOUND: " + nextToken.type + " " + nextToken.text);
-            System.out.println("LINE NO: " + nextToken.line_number);
-            System.out.println("CLMN NO: " + nextToken.column_number);
-            throw new Error();
+    void read(String type) {
+        if (!nextToken.type.type.equals(type)) {
+            throw new Error("Expected: ->|" + type + "|<-. " + "Found: " + nextToken.type + " " + nextToken.text
+                    + ". Line: " + nextToken.line_number + ". Column: " + nextToken.column_number);
         }
 
-        if(hasNext()){
+        if (hasNext()) {
             getNextToken();
         }
     }
 
-    void read(TokenType kind){
+    void read(TokenType kind) {
 
-        if(nextToken.type != kind){
-            System.out.println("EXPECTED: "+kind);
-            System.out.println("FOUND: "+nextToken.type+" "+nextToken.text);
-            System.out.println("LINE NO: " + nextToken.line_number);
-            System.out.println("CLMN NO: " + nextToken.column_number);
-            throw new Error();
+        if (nextToken.type != kind) {
+            throw new Error("Expected: " + kind + ". Found: " + nextToken.type + " " + nextToken.text + ". Line: "
+                    + nextToken.line_number + ". Column: " + nextToken.column_number);
         }
-
-//        ASTNode node_1 = new ASTNode(nextToken.type);
-//
-//        ASTNode node_2 = new ASTNode(nextToken.text);
-//        node_1.addChildNode(node_2);
-//
-//        treeStack.push(node_1);
 
         BinaryTreeNode node_1 = new BinaryTreeNode(nextToken.type.type);
         BinaryTreeNode node_2 = new BinaryTreeNode(nextToken.text);
 
         node_1.setLeftChild(node_2);
 
-        node_1.setChildCount(1);
-        binaryTreeStack.push(node_1);
+        node_1.setChildren(1);
+        treeStack.push(node_1);
 
         getNextToken();
 
     }
 
-
-//    void constructTree(String node_label, int count){
-//        ASTNode node = new ASTNode(node_label);
-//        for(int i = 0; i < count ;i++){
-//            node.addChildAtIndex(0,treeStack.pop());
-//        }
-//        treeStack.push(node);
-//    }
-
-    void constructTree(String node_label, int count){
+    void constructTree(String node_label, int count) {
         BinaryTreeNode node = new BinaryTreeNode(node_label);
         BinaryTreeNode p = null;
 
-        for(int j = 0; j < count; j++){
-            BinaryTreeNode c = binaryTreeStack.pop();
-            if(p != null){
+        for (int j = 0; j < count; j++) {
+            BinaryTreeNode c = treeStack.pop();
+            if (p != null) {
                 c.setRightChild(p);
             }
             p = c;
         }
         node.setLeftChild(p);
-        node.setChildCount(count);
-        binaryTreeStack.push(node);
+        node.setChildren(count);
+        treeStack.push(node);
     }
 }
